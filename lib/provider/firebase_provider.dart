@@ -13,30 +13,56 @@ class FirebaseProvider extends ChangeNotifier {
   List<Message> messages = [];
   List<UserModel> search = [];
 
-  List<UserModel> getAllUsers() {
-    FirebaseFirestore.instance
-        .collection('users')
-        .orderBy('lastActive', descending: true)
-        .snapshots(includeMetadataChanges: true)
-        .listen((users) {
-      this.users = users.docs
-          .map((doc) => UserModel.fromJson(doc.data()))
-          .toList();
+  Future<void> getAllUsers() async {
+    try {
+      print('Fetching users...');
+      final snapshots = await FirebaseFirestore.instance
+          .collection('users')
+          .orderBy('lastActive', descending: true)
+          .get();
+          
+      print('Found ${snapshots.docs.length} users');
+      
+      users = snapshots.docs.map((doc) {
+        try {
+          return UserModel.fromJson(doc.data());
+        } catch (e) {
+          print('Error parsing user document ${doc.id}: $e');
+          return null;
+        }
+      }).whereType<UserModel>().toList();
+          
+      print('Processed users: ${users.length}');
       notifyListeners();
-    });
-    return users;
+    } catch (e) {
+      print('Error getting users: $e');
+    }
   }
 
-  UserModel? getUserById(String userId) {
-    FirebaseFirestore.instance
-        .collection('users')
-        .doc(userId)
-        .snapshots(includeMetadataChanges: true)
-        .listen((user) {
-      this.user = UserModel.fromJson(user.data()!);
-      notifyListeners();
-    });
-    return user;
+  Future<void> getUserById(String userId) async {
+    int retries = 3;
+    while (retries > 0) {
+      try {
+        final getUser = await FirebaseFirestore.instance
+            .collection('users')
+            .doc(userId)
+            .get();
+
+        if (!getUser.exists || getUser.data() == null) {
+          return;
+        }
+
+        user = UserModel.fromJson(getUser.data()!);
+        notifyListeners();
+        return; // Success, exit the retry loop
+      } catch (e) {
+        print('Error getting user by ID (retries left: ${retries-1}): $e');
+        retries--;
+        if (retries > 0) {
+          await Future.delayed(Duration(seconds: 2)); // Wait before retrying
+        }
+      }
+    }
   }
 
   List<Message> getMessages(String receiverId) {

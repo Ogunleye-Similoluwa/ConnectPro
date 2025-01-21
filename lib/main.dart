@@ -16,17 +16,11 @@ Future<void> _backgroundMessageHandler(
   );
 }
 
-Future<void> main() async {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
-
-  await FirebaseMessaging.instance.getInitialMessage();
-
-  FirebaseMessaging.onBackgroundMessage(
-      _backgroundMessageHandler);
   runApp(const MyApp());
 }
 

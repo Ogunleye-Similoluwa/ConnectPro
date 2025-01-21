@@ -19,14 +19,28 @@ class ChatsScreen extends StatefulWidget {
 class _ChatsScreenState extends State<ChatsScreen>
     with WidgetsBindingObserver {
   final notificationService = NotificationsService();
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    Provider.of<FirebaseProvider>(context, listen: false)
-        .getAllUsers();
+    // Load users and set online status
+    _initializeUser();
+  }
 
-    notificationService.firebaseNotification(context);
+  Future<void> _initializeUser() async {
+    try {
+      // Set current user as online
+      await FirebaseFirestoreService.updateUserData({
+        'isOnline': true,
+        'lastActive': DateTime.now(),
+      });
+      
+      // Load all users
+      Provider.of<FirebaseProvider>(context, listen: false).getAllUsers();
+    } catch (e) {
+      print('Error initializing user: $e');
+    }
   }
 
   @override
@@ -70,7 +84,7 @@ class _ChatsScreenState extends State<ChatsScreen>
       lastActive: DateTime.now(),
     ),
     UserModel(
-      uid: '1',
+      uid: '4',
       name: 'Charlotte',
       email: 'test@test.test',
       image: 'https://i.pravatar.cc/150?img=1',
@@ -117,20 +131,44 @@ class _ChatsScreenState extends State<ChatsScreen>
           ],
         ),
         body: Consumer<FirebaseProvider>(
-            builder: (context, value, child) {
-          return ListView.separated(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 16),
-            itemCount: value.users.length,
-            separatorBuilder: (context, index) =>
-                const SizedBox(height: 10),
-            physics: const BouncingScrollPhysics(),
-            itemBuilder: (context, index) => value
-                        .users[index].uid !=
-                    FirebaseAuth.instance.currentUser?.uid
-                ? UserItem(user: value.users[index])
-                : const SizedBox(),
-          );
-        }),
+          builder: (context, provider, _) {
+            if (provider.users.isEmpty) {
+              return Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.people_outline,
+                      size: 80,
+                      color: Colors.grey.shade300,
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      'No Users Found',
+                      style: TextStyle(
+                        fontSize: 18,
+                        color: Colors.grey.shade600,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }
+
+            return ListView.builder(
+              padding: const EdgeInsets.all(16),
+              itemCount: provider.users.length,
+              physics: const BouncingScrollPhysics(),
+              itemBuilder: (context, index) {
+                final user = provider.users[index];
+                if (user.uid == FirebaseAuth.instance.currentUser?.uid) {
+                  return const SizedBox.shrink();
+                }
+                return UserItem(user: user);
+              },
+            );
+          },
+        ),
       );
 }

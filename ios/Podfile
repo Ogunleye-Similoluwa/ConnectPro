@@ -32,37 +32,43 @@ target 'Runner' do
   use_frameworks!
   use_modular_headers!
 
-  pod 'Firebase', '10.25.0'
-  pod 'FirebaseCore', '10.25.0'
-  pod 'FirebaseAuth', '10.25.0'
-  pod 'FirebaseFirestore', '10.25.0'
-  pod 'FirebaseStorage', '10.25.0'
-  pod 'FirebaseMessaging', '10.25.0'
-  pod 'FirebaseInstallations', '10.25.0'
+  # pod 'Firebase', '10.25.0'
+  # pod 'FirebaseCore', '10.25.0'
+  # pod 'FirebaseAuth', '10.25.0'
+  # pod 'FirebaseFirestore', '10.25.0'
+  # pod 'FirebaseStorage', '10.25.0'
+  # pod 'FirebaseMessaging', '10.25.0'
+  # pod 'FirebaseInstallations', '10.25.0'
+  pod 'Firebase', :modular_headers => true
+  pod 'FirebaseCore', :modular_headers => true
+  pod 'GoogleUtilities', :modular_headers => true
+  pod 'FirebaseMessaging', :modular_headers => true
 
   # Specify gRPC dependencies
-  pod 'gRPC-Core', '~> 1.62.0'
-  pod 'gRPC-C++', '~> 1.62.0'
-  pod 'gRPC', '~> 1.62.0'
-  pod 'abseil', '~> 1.20240116.1'
+  # pod 'gRPC-Core', :modular_headers => true
+  # pod 'gRPC-C++', :modular_headers => true
+  # pod 'openssl-grpc', :modular_headers => true
 
   # Use local copy of BoringSSL
-  pod 'BoringSSL-GRPC', :path => 'BoringSSL'
+  # pod 'BoringSSL-GRPC', :path => 'BoringSSL'
 
   flutter_install_all_ios_pods File.dirname(File.realpath(__FILE__))
 end
 
 post_install do |installer|
   installer.pods_project.targets.each do |target|
+    if target.name == 'BoringSSL-GRPC'
+      target.source_build_phase.files.each do |file|
+        if file.settings && file.settings['COMPILER_FLAGS']
+          flags = file.settings['COMPILER_FLAGS'].split
+          flags.reject! { |flag| flag == '-GCC_WARN_INHIBIT_ALL_WARNINGS' }
+          file.settings['COMPILER_FLAGS'] = flags.join(' ')
+        end
+      end
+    end
     flutter_additional_ios_build_settings(target)
-    
     target.build_configurations.each do |config|
       config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '13.0'
-      config.build_settings['ENABLE_BITCODE'] = 'NO'
-      config.build_settings['ONLY_ACTIVE_ARCH'] = 'YES'
-      
-      # Force the build system to use more memory
-      config.build_settings['COMPILER_INDEX_STORE_ENABLE'] = 'NO'
     end
   end
 end

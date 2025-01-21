@@ -102,26 +102,49 @@ class NotificationsService {
   }
 
   Future<void> getToken() async {
-    final token =
-        await FirebaseMessaging.instance.getToken();
-    _saveToken(token!);
+    try {
+      final token = await FirebaseMessaging.instance.getToken();
+      if (token != null) {
+        await _saveToken(token);
+        print('FCM Token saved: $token');
+      }
+    } catch (e) {
+      print('Error getting FCM token: $e');
+    }
   }
 
-  Future<void> _saveToken(String token) async =>
+  Future<void> _saveToken(String token) async {
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) return;
+      
       await FirebaseFirestore.instance
           .collection('users')
-          .doc(FirebaseAuth.instance.currentUser!.uid)
-          .set({'token': token}, SetOptions(merge: true));
+          .doc(user.uid)
+          .update({'token': token});
+    } catch (e) {
+      print('Error saving token: $e');
+    }
+  }
 
   String receiverToken = '';
 
-  Future<void> getReceiverToken(String? receiverId) async {
-    final getToken = await FirebaseFirestore.instance
-        .collection('users')
-        .doc(receiverId)
-        .get();
-
-    receiverToken = await getToken.data()!['token'];
+  Future<String?> getReceiverToken(String receiverId) async {
+    try {
+      final getUser = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(receiverId)
+          .get();
+      
+      if (!getUser.exists || getUser.data() == null) {
+        return null;
+      }
+      
+      return getUser.data()?['token'] as String?;
+    } catch (e) {
+      print('Error getting receiver token: $e');
+      return null;
+    }
   }
 
   void firebaseNotification(context) {

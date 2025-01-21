@@ -49,8 +49,14 @@ class _ChatScreenState extends State<ChatScreen> {
                 ? Row(
                     children: [
                       CircleAvatar(
-                        backgroundImage:
-                            NetworkImage(value.user!.image),
+                        backgroundImage: value.user?.image != null
+                            ? Image.network(
+                                value.user!.image!,
+                                errorBuilder: (context, error, stackTrace) {
+                                  return Image.asset('assets/default_avatar.png');
+                                },
+                              ).image
+                            : const AssetImage('assets/default_avatar.png') as ImageProvider,
                         radius: 20,
                       ),
                       const SizedBox(width: 10),
