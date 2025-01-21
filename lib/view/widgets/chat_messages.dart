@@ -15,81 +15,81 @@ class ChatMessages extends StatelessWidget {
         receiverId: 'gNfEHSQZ5ZUcY6JG5AarK8O0SVw1',
         content: 'Hello',
         sentTime: DateTime.now(),
-        messageType: MessageType.text),
+        type: MessageType.text.name),
     Message(
         senderId: 'gNfEHSQZ5ZUcY6JG5AarK8O0SVw1',
         receiverId: '2',
         content: 'How are you?',
         sentTime: DateTime.now(),
-        messageType: MessageType.text),
+        type: MessageType.text.name),
     Message(
         senderId: '2',
         receiverId: 'gNfEHSQZ5ZUcY6JG5AarK8O0SVw1',
         content: 'Fine',
         sentTime: DateTime.now(),
-        messageType: MessageType.text),
+        type: MessageType.text.name),
     Message(
         senderId: 'gNfEHSQZ5ZUcY6JG5AarK8O0SVw1',
         receiverId: '2',
         content: 'What are you doing?',
         sentTime: DateTime.now(),
-        messageType: MessageType.text),
+        type: MessageType.text.name),
     Message(
         senderId: '2',
         receiverId: 'gNfEHSQZ5ZUcY6JG5AarK8O0SVw1',
         content: 'Nothing',
         sentTime: DateTime.now(),
-        messageType: MessageType.text),
+        type: MessageType.text.name),
     Message(
         senderId: 'gNfEHSQZ5ZUcY6JG5AarK8O0SVw1',
         receiverId: '2',
         content: 'Can you help me?',
         sentTime: DateTime.now(),
-        messageType: MessageType.text),
+        type: MessageType.text.name),
     Message(
         senderId: '2',
         receiverId: 'gNfEHSQZ5ZUcY6JG5AarK8O0SVw1',
         content:
             'https://images.unsplash.com/photo-1669992755631-3c46eccbeb7d?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxlZGl0b3JpYWwtZmVlZHwxMHx8fGVufDB8fHx8&auto=format&fit=crop&w=500&q=60',
         sentTime: DateTime.now(),
-        messageType: MessageType.image),
+        type: MessageType.image.name),
     Message(
         senderId: 'gNfEHSQZ5ZUcY6JG5AarK8O0SVw1',
         receiverId: '2',
         content: 'Thank you',
         sentTime: DateTime.now(),
-        messageType: MessageType.text),
+        type: MessageType.text.name),
     Message(
       senderId: '2',
       receiverId: 'gNfEHSQZ5ZUcY6JG5AarK8O0SVw1',
       content: 'You are welcome',
       sentTime: DateTime.now(),
-      messageType: MessageType.text,
+      type: MessageType.text.name,
     ),
     Message(
         senderId: 'gNfEHSQZ5ZUcY6JG5AarK8O0SVw1',
         receiverId: '2',
         content: 'Bye',
         sentTime: DateTime.now(),
-        messageType: MessageType.text),
+        type: MessageType.text.name),
     Message(
         senderId: '2',
         receiverId: 'gNfEHSQZ5ZUcY6JG5AarK8O0SVw1',
         content: 'Bye',
         sentTime: DateTime.now(),
-        messageType: MessageType.text),
+        type: MessageType.text.name),
     Message(
         senderId: 'gNfEHSQZ5ZUcY6JG5AarK8O0SVw1',
         receiverId: '2',
         content: 'See you later',
         sentTime: DateTime.now(),
-        messageType: MessageType.text),
+        type: MessageType.text.name),
     Message(
         senderId: '2',
         receiverId: 'gNfEHSQZ5ZUcY6JG5AarK8O0SVw1',
         content: 'See you later',
         sentTime: DateTime.now(),
-        messageType: MessageType.text)
+        type: MessageType.text.name)
   ];
 
   @override
@@ -111,8 +111,8 @@ class ChatMessages extends StatelessWidget {
                   itemCount: value.messages.length,
                   itemBuilder: (context, index) {
                     final isTextMessage =
-                        value.messages[index].messageType ==
-                            MessageType.text;
+                        value.messages[index].type ==
+                            MessageType.text.name;
                     final isMe = receiverId !=
                         value.messages[index].senderId;
 

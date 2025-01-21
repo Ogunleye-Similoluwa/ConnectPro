@@ -15,24 +15,25 @@ class FirebaseProvider extends ChangeNotifier {
 
   Future<void> getAllUsers() async {
     try {
-      print('Fetching users...');
       final snapshots = await FirebaseFirestore.instance
           .collection('users')
-          .orderBy('lastActive', descending: true)
+          .where('uid', isNotEqual: FirebaseAuth.instance.currentUser?.uid)
           .get();
-          
-      print('Found ${snapshots.docs.length} users');
+
+      // Convert to Set to remove duplicates based on email
+      final uniqueUsers = <String, UserModel>{};
+      for (var doc in snapshots.docs) {
+        final user = UserModel.fromJson(doc.data());
+        uniqueUsers[user.email] = user;
+      }
+
+      users = uniqueUsers.values.toList();
       
-      users = snapshots.docs.map((doc) {
-        try {
-          return UserModel.fromJson(doc.data());
-        } catch (e) {
-          print('Error parsing user document ${doc.id}: $e');
-          return null;
-        }
-      }).whereType<UserModel>().toList();
-          
-      print('Processed users: ${users.length}');
+      print('Unique users loaded: ${users.length}');
+      for (var user in users) {
+        print('User: ${user.name} (${user.email})');
+      }
+      
       notifyListeners();
     } catch (e) {
       print('Error getting users: $e');

@@ -1,4 +1,5 @@
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_chat_app/constants.dart';
 import 'package:firebase_chat_app/view/screens/search_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -18,6 +19,7 @@ class ChatsScreen extends StatefulWidget {
 
 class _ChatsScreenState extends State<ChatsScreen>
     with WidgetsBindingObserver {
+  final currentUser = FirebaseAuth.instance.currentUser;
   final notificationService = NotificationsService();
 
   @override
@@ -110,65 +112,188 @@ class _ChatsScreenState extends State<ChatsScreen>
   ];
 
   @override
-  Widget build(BuildContext context) => Scaffold(
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [Colors.blue.shade50, Colors.white],
+        ),
+      ),
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
         appBar: AppBar(
-          title: const Text('Chats'),
+          elevation: 0,
+          backgroundColor: Colors.white,
+          centerTitle: true,
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back, color: AppTheme.primaryColor),
+            onPressed: () => Navigator.pop(context),
+          ),
+          title: Column(
+            children: [
+              const Text(
+                'ConnectPro',
+                style: TextStyle(
+                  color: AppTheme.primaryColor,
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              Consumer<FirebaseProvider>(
+                builder: (context, provider, _) {
+                  final uniqueUsers = provider.users.where((user) => 
+                    user.uid != currentUser?.uid).toSet().toList();
+                  return Text(
+                    '${uniqueUsers.length} Available Users',
+                    style: TextStyle(
+                      color: Colors.grey.shade600,
+                      fontSize: 14,
+                    ),
+                  );
+                },
+              ),
+            ],
+          ),
           actions: [
             IconButton(
               onPressed: () => Navigator.of(context).push(
-                  MaterialPageRoute(
-                      builder: (_) =>
-                          const UsersSearchScreen())),
-              icon: const Icon(Icons.search,
-                  color: Colors.black),
+                MaterialPageRoute(builder: (_) => const UsersSearchScreen()),
+              ),
+              icon: const Icon(Icons.search, color: AppTheme.primaryColor),
             ),
             IconButton(
-              onPressed: () =>
-                  FirebaseAuth.instance.signOut(),
-              icon: const Icon(Icons.logout,
-                  color: Colors.black),
+              onPressed: () => _showProfileDialog(context),
+              icon: const Icon(Icons.more_vert, color: AppTheme.primaryColor),
             ),
           ],
         ),
         body: Consumer<FirebaseProvider>(
           builder: (context, provider, _) {
             if (provider.users.isEmpty) {
-              return Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      Icons.people_outline,
-                      size: 80,
-                      color: Colors.grey.shade300,
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      'No Users Found',
-                      style: TextStyle(
-                        fontSize: 18,
-                        color: Colors.grey.shade600,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ],
-                ),
-              );
+              return _buildEmptyState();
             }
+
+            // Filter out duplicates and current user
+            final uniqueUsers = provider.users.where((user) => 
+              user.uid != currentUser?.uid).toSet().toList();
 
             return ListView.builder(
               padding: const EdgeInsets.all(16),
-              itemCount: provider.users.length,
+              itemCount: uniqueUsers.length,
               physics: const BouncingScrollPhysics(),
               itemBuilder: (context, index) {
-                final user = provider.users[index];
-                if (user.uid == FirebaseAuth.instance.currentUser?.uid) {
-                  return const SizedBox.shrink();
-                }
+                final user = uniqueUsers[index];
                 return UserItem(user: user);
               },
             );
           },
         ),
-      );
+      ),
+    );
+  }
+
+  Widget _buildEmptyState() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.people_outline,
+            size: 100,
+            color: Colors.grey.shade300,
+          ),
+          const SizedBox(height: 16),
+          Text(
+            'No Users Found',
+            style: TextStyle(
+              fontSize: 24,
+              color: Colors.grey.shade600,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Start connecting with other users',
+            style: TextStyle(
+              fontSize: 16,
+              color: Colors.grey.shade500,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showProfileDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => Consumer<FirebaseProvider>(
+        builder: (context, provider, _) {
+          final currentUserData = provider.users.firstWhere(
+            (user) => user.uid == currentUser?.uid,
+            orElse: () => UserModel(
+              uid: '',
+              name: '',
+              email: '',
+              image: '',
+              isOnline: false,
+              lastActive: DateTime.now(),
+            ),
+          );
+
+          return AlertDialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+            ),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                CircleAvatar(
+                  radius: 50,
+                  backgroundImage: currentUserData.image != null && currentUserData.image!.isNotEmpty
+                      ? NetworkImage(currentUserData.image!)
+                      : null,
+                  child: currentUserData.image == null || currentUserData.image!.isEmpty
+                      ? Text(
+                          currentUserData.name.substring(0, 1).toUpperCase(),
+                          style: const TextStyle(fontSize: 32),
+                        )
+                      : null,
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  currentUserData.name,
+                  style: const TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                Text(
+                  currentUserData.email,
+                  style: TextStyle(
+                    color: Colors.grey.shade600,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                const Divider(),
+                ListTile(
+                  leading: const Icon(Icons.access_time),
+                  title: const Text('Last Active'),
+                  subtitle: Text(
+                    _formatDateTime(currentUserData.lastActive),
+                  ),
+                ),
+              ],
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  String _formatDateTime(DateTime dateTime) {
+    return '${dateTime.day}/${dateTime.month}/${dateTime.year} ${dateTime.hour}:${dateTime.minute}';
+  }
 }

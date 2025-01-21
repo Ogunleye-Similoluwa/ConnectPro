@@ -3,14 +3,14 @@ class Message {
   final String receiverId;
   final String content;
   final DateTime sentTime;
-  final MessageType messageType;
+  final String type;
 
   const Message({
     required this.senderId,
     required this.receiverId,
     required this.sentTime,
     required this.content,
-    required this.messageType,
+    this.type = 'text',
   });
 
   factory Message.fromJson(Map<String, dynamic> json) =>
@@ -19,8 +19,7 @@ class Message {
         senderId: json['senderId'],
         sentTime: json['sentTime'].toDate(),
         content: json['content'],
-        messageType:
-            MessageType.fromJson(json['messageType']),
+        type: json['type'] ?? 'text',
       );
 
   Map<String, dynamic> toJson() => {
@@ -28,7 +27,7 @@ class Message {
         'senderId': senderId,
         'sentTime': sentTime,
         'content': content,
-        'messageType': messageType.toJson(),
+        'type': type,
       };
 }
 

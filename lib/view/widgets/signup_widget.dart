@@ -238,6 +238,51 @@ class _SignUpWidgetState extends State<SignUpWidget> with SingleTickerProviderSt
                     ),
                   ),
                 ),
+              if (_currentStep == _steps.length - 1) ...[
+                Padding(
+                  padding: const EdgeInsets.all(24.0),
+                  child: AnimatedContainer(
+                    duration: AppTheme.quickDuration,
+                    width: double.infinity,
+                    height: 56,
+                    child: ElevatedButton(
+                      onPressed: !isLoading ? signUp : null,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.blue.shade400,
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        elevation: 8,
+                        shadowColor: Colors.blue.withOpacity(0.5),
+                      ),
+                      child: isLoading
+                          ? const SizedBox(
+                              width: 24,
+                              height: 24,
+                              child: CircularProgressIndicator(
+                                color: Colors.white,
+                                strokeWidth: 2,
+                              ),
+                            )
+                          : const Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(Icons.check_circle_outline, size: 24),
+                                SizedBox(width: 8),
+                                Text(
+                                  'Create Account',
+                                  style: TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ],
+                            ),
+                    ),
+                  ),
+                ),
+              ],
             ],
           ),
         ),
@@ -456,33 +501,43 @@ class _SignUpWidgetState extends State<SignUpWidget> with SingleTickerProviderSt
     switch (_currentStep) {
       case 0:
         if (file == null) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Please select a profile picture'),
-              backgroundColor: Colors.red,
-            ),
-          );
+          _showError('Please select a profile picture');
           return false;
         }
         return true;
       case 1:
-        if (nameController.text.isEmpty ||
-            !EmailValidator.validate(emailController.text)) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Please fill in all fields correctly'),
-              backgroundColor: Colors.red,
-            ),
-          );
+        if (nameController.text.trim().isEmpty) {
+          _showError('Please enter your name');
+          return false;
+        }
+        if (!EmailValidator.validate(emailController.text.trim())) {
+          _showError('Please enter a valid email');
           return false;
         }
         return true;
       case 2:
-        return passwordController.text.length >= 6 &&
-            passwordController.text == confirmPasswordController.text;
+        if (passwordController.text.length < 6) {
+          _showError('Password must be at least 6 characters');
+          return false;
+        }
+        if (passwordController.text != confirmPasswordController.text) {
+          _showError('Passwords do not match');
+          return false;
+        }
+        return true;
       default:
         return false;
     }
+  }
+
+  void _showError(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Colors.red,
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
   }
 
   Future<void> signUp() async {
@@ -495,19 +550,15 @@ class _SignUpWidgetState extends State<SignUpWidget> with SingleTickerProviderSt
       showDialog(
         context: context,
         barrierDismissible: false,
-        builder: (context) => Center(
-          child: Container(
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: const CircularProgressIndicator(
-              color: AppTheme.primaryColor,
-            ),
-          ),
+        builder: (context) => const Center(
+          child: CircularProgressIndicator(),
         ),
       );
+
+      // Print debug info
+      print('Creating user with:');
+      print('Name: ${nameController.text.trim()}');
+      print('Email: ${emailController.text.trim()}');
 
       // Create user in Firebase Auth
       final userCredential = await FirebaseAuth.instance.createUserWithEmailAndPassword(
@@ -529,28 +580,19 @@ class _SignUpWidgetState extends State<SignUpWidget> with SingleTickerProviderSt
         image: image,
       );
 
+      print('User created successfully with name: ${nameController.text.trim()}');
+
       // Setup notifications
       await notifications.requestPermission();
       await notifications.getToken();
 
       if (!mounted) return;
-      
-      // Pop loading dialog and navigate
-      Navigator.of(context).pop();
+      Navigator.of(context).pop(); // Pop loading dialog
       Navigator.of(context).popUntil((route) => route.isFirst);
     } catch (e) {
-      // Pop loading dialog if error occurs
       if (!mounted) return;
-      Navigator.of(context).pop();
-      
-      // Show error message
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(e.toString()),
-          backgroundColor: Colors.red,
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
+      Navigator.of(context).pop(); // Pop loading dialog
+      _showError(e.toString());
     } finally {
       if (mounted) {
         setState(() => isLoading = false);

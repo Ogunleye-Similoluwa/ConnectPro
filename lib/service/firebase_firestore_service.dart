@@ -8,6 +8,7 @@ import 'firebase_storage_service.dart';
 
 class FirebaseFirestoreService {
   static final firestore = FirebaseFirestore.instance;
+  static final auth = FirebaseAuth.instance;
 
   static Future<void> createUser({
     required String name,
@@ -16,24 +17,27 @@ class FirebaseFirestoreService {
     String? image,
   }) async {
     try {
-      final user = UserModel(
+      // Check if user already exists
+      final userDoc = await firestore.collection('users').doc(uid).get();
+      if (userDoc.exists) {
+        print('User already exists');
+        return;
+      }
+
+      final newUser = UserModel(
         uid: uid,
-        email: email,
         name: name,
-        image: image ?? '',  // Use empty string if no image
+        email: email,
+        image: image,
         isOnline: true,
         lastActive: DateTime.now(),
       );
 
-      // Create or update the user document
-      await firestore
-          .collection('users')
-          .doc(uid)
-          .set(user.toJson(), SetOptions(merge: true));
-          
-      print('User created successfully: ${user.name}');
+      await firestore.collection('users').doc(uid).set(newUser.toJson());
+      print('User created successfully: $name ($email)');
     } catch (e) {
       print('Error creating user: $e');
+      rethrow;
     }
   }
 
@@ -91,29 +95,16 @@ class FirebaseFirestoreService {
 
   static Future<void> updateUserData(Map<String, dynamic> data) async {
     try {
-      final user = FirebaseAuth.instance.currentUser;
-      if (user == null) return;
+      final currentUser = auth.currentUser;
+      if (currentUser == null) return;
 
-      // First check if document exists
-      final docRef = firestore.collection('users').doc(user.uid);
-      final docSnapshot = await docRef.get();
-
-      if (!docSnapshot.exists) {
-        // Create initial user document if it doesn't exist
-        await docRef.set({
-          'uid': user.uid,
-          'email': user.email,
-          'name': user.displayName ?? 'User',
-          'image': user.photoURL,
-          'lastActive': DateTime.now(),
-          'isOnline': true,
-        });
-      }
-
-      // Then update with new data
-      await docRef.update(data);
+      await firestore
+          .collection('users')
+          .doc(currentUser.uid)
+          .update(data);
     } catch (e) {
       print('Error updating user data: $e');
+      rethrow;
     }
   }
 
@@ -142,5 +133,31 @@ class FirebaseFirestoreService {
     return snapshot.docs
         .map((doc) => UserModel.fromJson(doc.data()))
         .toList();
+  }
+
+  static Stream<List<UserModel>> getUsers() {
+    return firestore
+        .collection('users')
+        .where('uid', isNotEqual: auth.currentUser?.uid)
+        .snapshots()
+        .map((snapshot) {
+      final users = snapshot.docs
+          .map((doc) => UserModel.fromJson(doc.data()))
+          .toList();
+
+      // Remove duplicates based on email
+      final uniqueUsers = users.fold<Map<String, UserModel>>(
+        {},
+        (map, user) {
+          if (!map.containsKey(user.email)) {
+            map[user.email] = user;
+          }
+          return map;
+        },
+      ).values.toList();
+
+      print('Fetched ${uniqueUsers.length} unique users');
+      return uniqueUsers;
+    });
   }
 }

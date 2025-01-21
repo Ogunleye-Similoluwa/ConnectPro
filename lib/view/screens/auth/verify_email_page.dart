@@ -33,11 +33,31 @@ class _VerifyEmailPageState extends State<VerifyEmailPage> with SingleTickerProv
     _animationController.forward();
 
     isEmailVerified = FirebaseAuth.instance.currentUser!.emailVerified;
+
     if (!isEmailVerified) {
       sendVerificationEmail();
+      
+      // Check email verification status every 3 seconds
       timer = Timer.periodic(
         const Duration(seconds: 3),
         (_) => checkEmailVerified(),
+      );
+
+      // Countdown timer for resend button
+      Timer.periodic(
+        const Duration(seconds: 1),
+        (Timer t) {
+          if (mounted) {
+            setState(() {
+              if (timeLeft > 0) {
+                timeLeft--;
+              } else {
+                canResendEmail = true;
+                t.cancel();
+              }
+            });
+          }
+        },
       );
     }
   }
@@ -49,18 +69,29 @@ class _VerifyEmailPageState extends State<VerifyEmailPage> with SingleTickerProv
     super.dispose();
   }
 
-  Future checkEmailVerified() async {
-    await FirebaseAuth.instance.currentUser!.reload();
+  Future<void> checkEmailVerified() async {
+    try {
+      // Reload user data
+      await FirebaseAuth.instance.currentUser!.reload();
 
-    setState(() {
-      isEmailVerified =
-          FirebaseAuth.instance.currentUser!.emailVerified;
-    });
+      setState(() {
+        isEmailVerified = FirebaseAuth.instance.currentUser!.emailVerified;
+      });
 
-    if (isEmailVerified) timer?.cancel();
+      if (isEmailVerified) {
+        timer?.cancel();
+        // Navigate to chat screen
+        if (!mounted) return;
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (_) => const ChatsScreen()),
+        );
+      }
+    } catch (e) {
+      print('Error checking email verification: $e');
+    }
   }
 
-  Future sendVerificationEmail() async {
+  Future<void> sendVerificationEmail() async {
     try {
       final user = FirebaseAuth.instance.currentUser!;
       await user.sendEmailVerification();
@@ -69,20 +100,8 @@ class _VerifyEmailPageState extends State<VerifyEmailPage> with SingleTickerProv
         canResendEmail = false;
         timeLeft = 30;
       });
-
-      Timer.periodic(const Duration(seconds: 1), (timer) {
-        if (timeLeft > 0) {
-          setState(() {
-            timeLeft--;
-          });
-        } else {
-          setState(() {
-            canResendEmail = true;
-          });
-          timer.cancel();
-        }
-      });
     } catch (e) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(e.toString()),
