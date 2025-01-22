@@ -17,7 +17,7 @@ class FirebaseProvider extends ChangeNotifier {
     try {
       final snapshots = await FirebaseFirestore.instance
           .collection('users')
-          .where('uid', isNotEqual: FirebaseAuth.instance.currentUser?.uid)
+          .where('uid', isNotEqualTo: FirebaseAuth.instance.currentUser?.uid)
           .get();
 
       // Convert to Set to remove duplicates based on email
@@ -66,24 +66,22 @@ class FirebaseProvider extends ChangeNotifier {
     }
   }
 
-  List<Message> getMessages(String receiverId) {
+  void getMessages(String receiverId) {
+    final senderId = FirebaseAuth.instance.currentUser!.uid;
+    
     FirebaseFirestore.instance
-        .collection('users')
-        .doc(FirebaseAuth.instance.currentUser!.uid)
-        .collection('chat')
-        .doc(receiverId)
-        .collection('messages')
+        .collection('chats')
+        .doc(senderId)
+        .collection(receiverId)
         .orderBy('sentTime', descending: false)
-        .snapshots(includeMetadataChanges: true)
-        .listen((messages) {
-      this.messages = messages.docs
+        .snapshots()
+        .listen((snapshot) {
+      messages = snapshot.docs
           .map((doc) => Message.fromJson(doc.data()))
           .toList();
       notifyListeners();
-
       scrollDown();
     });
-    return messages;
   }
 
   void scrollDown() =>

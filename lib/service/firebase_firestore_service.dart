@@ -45,31 +45,77 @@ class FirebaseFirestoreService {
     required String content,
     required String receiverId,
   }) async {
-    final message = Message(
-      content: content,
-      sentTime: DateTime.now(),
-      receiverId: receiverId,
-      messageType: MessageType.text,
-      senderId: FirebaseAuth.instance.currentUser!.uid,
-    );
-    await _addMessageToChat(receiverId, message);
+    try {
+      final senderId = FirebaseAuth.instance.currentUser!.uid;
+      final message = Message(
+        content: content,
+        sentTime: DateTime.now(),
+        receiverId: receiverId,
+        senderId: senderId,
+        type: 'text',  // Specify message type
+      );
+
+      // Add message to sender's collection
+      await firestore
+          .collection('chats')
+          .doc(senderId)
+          .collection(receiverId)
+          .add(message.toJson());
+
+      // Add message to receiver's collection
+      await firestore
+          .collection('chats')
+          .doc(receiverId)
+          .collection(senderId)
+          .add(message.toJson());
+
+      print('Text message sent: $content');
+    } catch (e) {
+      print('Error sending text message: $e');
+      rethrow;
+    }
   }
 
   static Future<void> addImageMessage({
     required String receiverId,
     required Uint8List file,
   }) async {
-    final image = await FirebaseStorageService.uploadImage(
-        file, 'image/chat/${DateTime.now()}');
+    try {
+      final senderId = FirebaseAuth.instance.currentUser!.uid;
+      
+      // Upload image to Firebase Storage
+      final imageUrl = await FirebaseStorageService.uploadImage(
+        file,
+        'chat_images/${DateTime.now().millisecondsSinceEpoch}.jpg',
+      );
 
-    final message = Message(
-      content: image,
-      sentTime: DateTime.now(),
-      receiverId: receiverId,
-      messageType: MessageType.image,
-      senderId: FirebaseAuth.instance.currentUser!.uid,
-    );
-    await _addMessageToChat(receiverId, message);
+      final message = Message(
+        content: imageUrl,
+        sentTime: DateTime.now(),
+        receiverId: receiverId,
+        senderId: senderId,
+        type: 'image',  // Specify message type
+      );
+
+      // Add message to sender's collection
+      await firestore
+          .collection('chats')
+          .doc(senderId)
+          .collection(receiverId)
+          .add(message.toJson());
+
+      // Add message to receiver's collection
+      await firestore
+          .collection('chats')
+          .doc(receiverId)
+          .collection(senderId)
+          .add(message.toJson());
+
+      print('Image message sent: $imageUrl');
+    } catch (e) {
+      print('Error sending image message: $e');
+      rethrow;
+    }
   }
 
   static Future<void> _addMessageToChat(
@@ -138,7 +184,7 @@ class FirebaseFirestoreService {
   static Stream<List<UserModel>> getUsers() {
     return firestore
         .collection('users')
-        .where('uid', isNotEqual: auth.currentUser?.uid)
+        .where('uid', isNotEqualTo: auth.currentUser?.uid)
         .snapshots()
         .map((snapshot) {
       final users = snapshot.docs

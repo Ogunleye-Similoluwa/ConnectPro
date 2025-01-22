@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_chat_app/constants.dart';
+import 'package:firebase_chat_app/view/screens/auth/auth_page.dart';
 import 'package:firebase_chat_app/view/screens/search_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -126,46 +127,40 @@ class _ChatsScreenState extends State<ChatsScreen>
         appBar: AppBar(
           elevation: 0,
           backgroundColor: Colors.white,
-          centerTitle: true,
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back, color: AppTheme.primaryColor),
-            onPressed: () => Navigator.pop(context),
-          ),
-          title: Column(
-            children: [
-              const Text(
-                'ConnectPro',
-                style: TextStyle(
-                  color: AppTheme.primaryColor,
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              Consumer<FirebaseProvider>(
-                builder: (context, provider, _) {
-                  final uniqueUsers = provider.users.where((user) => 
-                    user.uid != currentUser?.uid).toSet().toList();
-                  return Text(
-                    '${uniqueUsers.length} Available Users',
-                    style: TextStyle(
-                      color: Colors.grey.shade600,
-                      fontSize: 14,
-                    ),
-                  );
-                },
-              ),
-            ],
+          title: const Text(
+            'ConnectPro',
+            style: TextStyle(
+              color: AppTheme.primaryColor,
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+            ),
           ),
           actions: [
             IconButton(
-              onPressed: () => Navigator.of(context).push(
+              icon: const Icon(Icons.search, color: AppTheme.primaryColor),
+              onPressed: () => Navigator.push(
+                context,
                 MaterialPageRoute(builder: (_) => const UsersSearchScreen()),
               ),
-              icon: const Icon(Icons.search, color: AppTheme.primaryColor),
             ),
-            IconButton(
-              onPressed: () => _showProfileDialog(context),
+            PopupMenuButton(
               icon: const Icon(Icons.more_vert, color: AppTheme.primaryColor),
+              itemBuilder: (context) => [
+                PopupMenuItem(
+                  child: ListTile(
+                    leading: const Icon(Icons.logout),
+                    title: const Text('Logout'),
+                    contentPadding: EdgeInsets.zero,
+                    onTap: () async {
+                      await FirebaseAuth.instance.signOut();
+                      if (!context.mounted) return;
+                      Navigator.of(context).pushReplacement(
+                        MaterialPageRoute(builder: (_) => const AuthPage()),
+                      );
+                    },
+                  ),
+                ),
+              ],
             ),
           ],
         ),

@@ -212,8 +212,8 @@ class _SignUpWidgetState extends State<SignUpWidget> with SingleTickerProviderSt
                         ),
                       ],
                     ),
-                  ),
-                ),
+                        ),
+                      ),
               ),
               
               // Bottom Navigation
@@ -370,7 +370,7 @@ class _SignUpWidgetState extends State<SignUpWidget> with SingleTickerProviderSt
                           ),
                         ],
                       )
-                    : null,
+                        : null,
               ),
             ),
           ),
@@ -409,10 +409,10 @@ class _SignUpWidgetState extends State<SignUpWidget> with SingleTickerProviderSt
             ),
             validator: (value) =>
                 value != null && value.isEmpty ? 'Enter your name' : null,
-          ),
-          const SizedBox(height: 20),
-          TextFormField(
-            controller: emailController,
+              ),
+              const SizedBox(height: 20),
+              TextFormField(
+                controller: emailController,
             decoration: AppTheme.inputDecoration(
               label: 'Email',
               hint: 'name@example.com',
@@ -422,7 +422,7 @@ class _SignUpWidgetState extends State<SignUpWidget> with SingleTickerProviderSt
                 email != null && !EmailValidator.validate(email)
                     ? 'Enter a valid email'
                     : null,
-          ),
+              ),
         ],
       ),
     );
@@ -449,8 +449,8 @@ class _SignUpWidgetState extends State<SignUpWidget> with SingleTickerProviderSt
       ),
       child: Column(
         children: [
-          TextFormField(
-            controller: passwordController,
+              TextFormField(
+                controller: passwordController,
             obscureText: !_isPasswordVisible,
             decoration: AppTheme.inputDecoration(
               label: 'Password',
@@ -464,14 +464,14 @@ class _SignUpWidgetState extends State<SignUpWidget> with SingleTickerProviderSt
                     setState(() => _isPasswordVisible = !_isPasswordVisible),
               ),
             ),
-            validator: (value) =>
-                value != null && value.length < 6
-                    ? 'Enter min. 6 characters'
-                    : null,
-          ),
-          const SizedBox(height: 20),
-          TextFormField(
-            controller: confirmPasswordController,
+                validator: (value) =>
+                    value != null && value.length < 6
+                        ? 'Enter min. 6 characters'
+                        : null,
+              ),
+              const SizedBox(height: 20),
+              TextFormField(
+                controller: confirmPasswordController,
             obscureText: !_isConfirmPasswordVisible,
             decoration: AppTheme.inputDecoration(
               label: 'Confirm Password',
@@ -487,11 +487,11 @@ class _SignUpWidgetState extends State<SignUpWidget> with SingleTickerProviderSt
                     () => _isConfirmPasswordVisible = !_isConfirmPasswordVisible),
               ),
             ),
-            validator: (value) =>
+                validator: (value) =>
                 value != passwordController.text
-                    ? 'Passwords do not match'
-                    : null,
-          ),
+                        ? 'Passwords do not match'
+                        : null,
+              ),
         ],
       ),
     );
@@ -500,7 +500,7 @@ class _SignUpWidgetState extends State<SignUpWidget> with SingleTickerProviderSt
   bool _validateCurrentStep() {
     switch (_currentStep) {
       case 0:
-        if (file == null) {
+    if (file == null) {
           _showError('Please select a profile picture');
           return false;
         }
@@ -547,9 +547,9 @@ class _SignUpWidgetState extends State<SignUpWidget> with SingleTickerProviderSt
       setState(() => isLoading = true);
 
       // Show loading dialog
-      showDialog(
-        context: context,
-        barrierDismissible: false,
+    showDialog(
+      context: context,
+      barrierDismissible: false,
         builder: (context) => const Center(
           child: CircularProgressIndicator(),
         ),
