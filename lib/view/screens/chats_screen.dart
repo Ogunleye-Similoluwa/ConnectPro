@@ -27,22 +27,19 @@ class _ChatsScreenState extends State<ChatsScreen>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    // Load users and set online status
+    // Initialize user and load data
     _initializeUser();
   }
 
   Future<void> _initializeUser() async {
     try {
-      // Set current user as online
-      await FirebaseFirestoreService.updateUserData({
-        'isOnline': true,
-        'lastActive': DateTime.now(),
-      });
+      // Initialize user status
+      await FirebaseFirestoreService.initializeUser();
       
       // Load all users
       Provider.of<FirebaseProvider>(context, listen: false).getAllUsers();
     } catch (e) {
-      print('Error initializing user: $e');
+      print('Error initializing chat screen: $e');
     }
   }
 

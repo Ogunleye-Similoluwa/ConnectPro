@@ -38,51 +38,87 @@ class _ChatTextFieldState extends State<ChatTextField> {
   }
 
   @override
-  Widget build(BuildContext context) => Row(
-        children: [
-          Expanded(
-            child: CustomTextFormField(
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Container(
+          decoration: BoxDecoration(
+            color: Colors.grey.shade100,
+            borderRadius: BorderRadius.circular(24),
+          ),
+          child: IconButton(
+            icon: const Icon(Icons.image_outlined),
+            color: Colors.grey.shade600,
+            onPressed: _sendImage,
+          ),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Container(
+            decoration: BoxDecoration(
+              color: Colors.grey.shade100,
+              borderRadius: BorderRadius.circular(24),
+            ),
+            child: TextField(
               controller: controller,
-              hintText: 'Add Message...',
+              maxLines: null,
+              keyboardType: TextInputType.multiline,
+              textCapitalization: TextCapitalization.sentences,
+              decoration: InputDecoration(
+                hintText: 'Message',
+                hintStyle: TextStyle(color: Colors.grey.shade600),
+                border: InputBorder.none,
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
+              ),
+              onSubmitted: (value) {
+                if (value.trim().isNotEmpty) {
+                  _sendText(context);
+                }
+              },
             ),
           ),
-          const SizedBox(width: 5),
-          CircleAvatar(
-            backgroundColor: mainColor,
-            radius: 20,
-            child: IconButton(
-              icon: const Icon(Icons.send,
-                  color: Colors.white),
-              onPressed: () => _sendText(context),
-            ),
+        ),
+        const SizedBox(width: 8),
+        Container(
+          decoration: BoxDecoration(
+            color: const Color(0xFF0084FF),
+            borderRadius: BorderRadius.circular(24),
           ),
-          const SizedBox(width: 5),
-          CircleAvatar(
-            backgroundColor: mainColor,
-            radius: 20,
-            child: IconButton(
-              icon: const Icon(Icons.camera_alt,
-                  color: Colors.white),
-              onPressed: _sendImage,
-            ),
+          child: IconButton(
+            icon: const Icon(Icons.send_rounded),
+            color: Colors.white,
+            onPressed: () => _sendText(context),
           ),
-        ],
-      );
+        ),
+      ],
+    );
+  }
 
   Future<void> _sendText(BuildContext context) async {
-    if (controller.text.isNotEmpty) {
+    final text = controller.text.trim();
+    if (text.isEmpty) return;
+
+    try {
       await FirebaseFirestoreService.addTextMessage(
         receiverId: widget.receiverId,
-        content: controller.text,
+        content: text,
       );
+      
       await notificationsService.sendNotification(
-        body: controller.text,
+        body: text,
         senderId: FirebaseAuth.instance.currentUser!.uid,
       );
+      
       controller.clear();
       FocusScope.of(context).unfocus();
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error sending message: $e')),
+      );
     }
-    FocusScope.of(context).unfocus();
   }
 
   Future<void> _sendImage() async {

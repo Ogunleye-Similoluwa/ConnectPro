@@ -16,60 +16,86 @@ class MessageBubble extends StatelessWidget {
   final Message message;
 
   @override
-  Widget build(BuildContext context) => Align(
-        alignment:
-            isMe ? Alignment.topLeft : Alignment.topRight,
-        child: Container(
-          decoration: BoxDecoration(
-            color: isMe ? mainColor : Colors.grey,
-            borderRadius: isMe
-                ? const BorderRadius.only(
-                    topRight: Radius.circular(30),
-                    bottomRight: Radius.circular(30),
-                    topLeft: Radius.circular(30),
-                  )
-                : const BorderRadius.only(
-                    topRight: Radius.circular(30),
-                    bottomLeft: Radius.circular(30),
-                    topLeft: Radius.circular(30),
+  Widget build(BuildContext context) {
+    return Align(
+      alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
+      child: Container(
+        margin: EdgeInsets.only(
+          top: 4,
+          bottom: 4,
+          left: isMe ? 48 : 0,
+          right: isMe ? 0 : 48,
+        ),
+        child: Column(
+          crossAxisAlignment: isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+          children: [
+            Container(
+              constraints: BoxConstraints(
+                maxWidth: MediaQuery.of(context).size.width * 0.75,
+              ),
+              decoration: BoxDecoration(
+                color: isMe ? const Color(0xFF0084FF) : Colors.white,
+                borderRadius: BorderRadius.circular(20).copyWith(
+                  bottomRight: isMe ? const Radius.circular(4) : null,
+                  bottomLeft: !isMe ? const Radius.circular(4) : null,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    offset: const Offset(0, 1),
+                    blurRadius: 8,
                   ),
-          ),
-          margin: const EdgeInsets.only(
-              top: 10, right: 10, left: 10),
-          padding: const EdgeInsets.all(10),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: isMe
-                ? CrossAxisAlignment.start
-                : CrossAxisAlignment.end,
-            children: [
-              isImage
-                  ? Container(
-                      height: 200,
-                      width: 200,
-                      decoration: BoxDecoration(
-                        borderRadius:
-                            BorderRadius.circular(15),
-                        image: DecorationImage(
-                          image:
-                              NetworkImage(message.content),
+                ],
+              ),
+              child: Padding(
+                padding: EdgeInsets.all(isImage ? 4 : 12),
+                child: isImage
+                    ? ClipRRect(
+                        borderRadius: BorderRadius.circular(16),
+                        child: Image.network(
+                          message.content,
+                          width: 200,
+                          height: 200,
                           fit: BoxFit.cover,
+                          loadingBuilder: (_, child, loading) {
+                            if (loading == null) return child;
+                            return Container(
+                              width: 200,
+                              height: 200,
+                              color: Colors.grey.shade100,
+                              child: const Center(
+                                child: CircularProgressIndicator(),
+                              ),
+                            );
+                          },
+                        ),
+                      )
+                    : Text(
+                        message.content,
+                        style: TextStyle(
+                          color: isMe ? Colors.white : Colors.black87,
+                          fontSize: 16,
                         ),
                       ),
-                    )
-                  : Text(message.content,
-                      style: const TextStyle(
-                          color: Colors.white)),
-              const SizedBox(height: 5),
-              Text(
-                timeago.format(message.sentTime),
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 10,
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.only(top: 4),
+              child: Text(
+                _formatTime(message.sentTime),
+                style: TextStyle(
+                  color: Colors.grey.shade600,
+                  fontSize: 11,
                 ),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
-      );
+      ),
+    );
+  }
+
+  String _formatTime(DateTime time) {
+    return '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}';
+  }
 }

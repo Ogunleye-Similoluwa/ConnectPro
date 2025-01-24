@@ -212,8 +212,8 @@ class _SignUpWidgetState extends State<SignUpWidget> with SingleTickerProviderSt
                         ),
                       ],
                     ),
-                        ),
-                      ),
+                  ),
+                ),
               ),
               
               // Bottom Navigation
@@ -547,18 +547,13 @@ class _SignUpWidgetState extends State<SignUpWidget> with SingleTickerProviderSt
       setState(() => isLoading = true);
 
       // Show loading dialog
-    showDialog(
-      context: context,
-      barrierDismissible: false,
+      showDialog(
+        context: context,
+        barrierDismissible: false,
         builder: (context) => const Center(
           child: CircularProgressIndicator(),
         ),
       );
-
-      // Print debug info
-      print('Creating user with:');
-      print('Name: ${nameController.text.trim()}');
-      print('Email: ${emailController.text.trim()}');
 
       // Create user in Firebase Auth
       final userCredential = await FirebaseAuth.instance.createUserWithEmailAndPassword(
@@ -566,18 +561,24 @@ class _SignUpWidgetState extends State<SignUpWidget> with SingleTickerProviderSt
         password: passwordController.text.trim(),
       );
 
+      // Update display name
+      await userCredential.user?.updateDisplayName(nameController.text.trim());
+
       // Upload profile picture
-      final image = await FirebaseStorageService.uploadImage(
-        file!,
-        'image/profile/${userCredential.user!.uid}',
-      );
+      String? imageUrl;
+      if (file != null) {
+        imageUrl = await FirebaseStorageService.uploadImage(
+          file!,
+          'image/profile/${userCredential.user!.uid}',
+        );
+      }
 
       // Create user document in Firestore
       await FirebaseFirestoreService.createUser(
         name: nameController.text.trim(),
         email: emailController.text.trim(),
         uid: userCredential.user!.uid,
-        image: image,
+        image: imageUrl,
       );
 
       print('User created successfully with name: ${nameController.text.trim()}');

@@ -16,181 +16,38 @@ class ChatScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [Colors.blue.shade50, Colors.white],
+    return Scaffold(
+      backgroundColor: Colors.white,
+      appBar: AppBar(
+        elevation: 0,
+        backgroundColor: Colors.white,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios, color: Colors.black87),
+          onPressed: () => Navigator.pop(context),
         ),
-      ),
-      child: Scaffold(
-        backgroundColor: Colors.transparent,
-        appBar: _buildAppBar(context),
-        body: Column(
-          children: [
-            Expanded(
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                decoration: const BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
+        title: Consumer<FirebaseProvider>(
+          builder: (context, provider, _) {
+            if (provider.user == null) return const SizedBox();
+            return Row(
+              children: [
+                CircleAvatar(
+                  radius: 20,
+                  backgroundColor: Colors.grey.shade100,
+                  backgroundImage: provider.user!.image != null ? 
+                    NetworkImage(provider.user!.image!) : null,
+                  child: provider.user!.image == null ? 
+                    Text(provider.user!.name[0].toUpperCase()) : null,
                 ),
-                child: Consumer<FirebaseProvider>(
-                  builder: (context, provider, _) {
-                    if (provider.messages.isEmpty) {
-                      return const Center(
-                        child: EmptyWidget(
-                          icon: Icons.message_outlined,
-                          text: 'No messages yet\nStart chatting!',
-                        ),
-                      );
-                    }
-                    return ListView.separated(
-                      controller: provider.scrollController,
-                      physics: const BouncingScrollPhysics(),
-                      padding: const EdgeInsets.only(top: 16, bottom: 16),
-                      itemCount: provider.messages.length,
-                      separatorBuilder: (context, index) => const SizedBox(height: 8),
-                      itemBuilder: (context, index) {
-                        final message = provider.messages[index];
-                        final isMe = message.senderId == FirebaseAuth.instance.currentUser?.uid;
-                        final showTime = index == 0 || 
-                          _shouldShowTime(provider.messages[index - 1], message);
-                        
-                        return Column(
-                          crossAxisAlignment: isMe 
-                              ? CrossAxisAlignment.end 
-                              : CrossAxisAlignment.start,
-                          children: [
-                            if (showTime) ...[
-                              Center(
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 12,
-                                    vertical: 4,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: Colors.grey.shade200,
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  child: Text(
-                                    _formatMessageDate(message.sentTime),
-                                    style: TextStyle(
-                                      color: Colors.grey.shade700,
-                                      fontSize: 12,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(height: 12),
-                            ],
-                            MessageBubble(
-                              message: message,
-                              isMe: isMe,
-                              isImage: message.type == 'image',
-                            ),
-                          ],
-                        );
-                      },
-                    );
-                  },
-                ),
-              ),
-            ),
-            Container(
-              decoration: BoxDecoration(
-                color: Colors.white,
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.grey.withOpacity(0.1),
-                    spreadRadius: 1,
-                    blurRadius: 10,
-                    offset: const Offset(0, -1),
-                  ),
-                ],
-              ),
-              child: SafeArea(
-                child: Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: ChatTextField(receiverId: userId),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  PreferredSizeWidget _buildAppBar(BuildContext context) {
-    return AppBar(
-      elevation: 0,
-      backgroundColor: Colors.transparent,
-      leading: IconButton(
-        icon: const Icon(Icons.arrow_back_ios, color: AppTheme.primaryColor),
-        onPressed: () => Navigator.pop(context),
-      ),
-      title: Consumer<FirebaseProvider>(
-        builder: (context, provider, _) {
-          if (provider.user == null) return const SizedBox();
-          
-          return Row(
-            children: [
-              Stack(
-                children: [
-                  Hero(
-                    tag: 'profile_${provider.user!.uid}',
-                    child: CircleAvatar(
-                      radius: 20,
-                      backgroundColor: Colors.grey.shade200,
-                      backgroundImage: provider.user!.image != null && 
-                          provider.user!.image!.isNotEmpty
-                          ? NetworkImage(provider.user!.image!)
-                          : null,
-                      child: provider.user!.image == null || 
-                          provider.user!.image!.isEmpty
-                          ? Text(
-                              provider.user!.name.substring(0, 1).toUpperCase(),
-                              style: const TextStyle(
-                                color: AppTheme.primaryColor,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 20,
-                              ),
-                            )
-                          : null,
-                    ),
-                  ),
-                  if (provider.user!.isOnline)
-                    Positioned(
-                      right: 0,
-                      bottom: 0,
-                      child: Container(
-                        width: 12,
-                        height: 12,
-                        decoration: BoxDecoration(
-                          color: Colors.green,
-                          shape: BoxShape.circle,
-                          border: Border.all(
-                            color: Colors.white,
-                            width: 2,
-                          ),
-                        ),
-                      ),
-                    ),
-                ],
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
+                const SizedBox(width: 12),
+                Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       provider.user!.name,
                       style: const TextStyle(
-                        color: AppTheme.primaryColor,
+                        color: Colors.black87,
                         fontSize: 16,
-                        fontWeight: FontWeight.bold,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
                     Text(
@@ -202,10 +59,73 @@ class ChatScreen extends StatelessWidget {
                     ),
                   ],
                 ),
+              ],
+            );
+          },
+        ),
+      ),
+      body: Container(
+        decoration: BoxDecoration(
+          color: Colors.grey.shade100,
+        ),
+        child: Column(
+          children: [
+            Expanded(
+              child: Consumer<FirebaseProvider>(
+                builder: (context, provider, _) {
+                  if (provider.messages.isEmpty) {
+                    provider.getMessages(userId);
+                    return _buildEmptyChat();
+                  }
+                  return ListView.builder(
+                    controller: provider.scrollController,
+                    itemCount: provider.messages.length,
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    itemBuilder: (context, index) {
+                      final message = provider.messages[index];
+                      final isMe = message.senderId == FirebaseAuth.instance.currentUser?.uid;
+                      return MessageBubble(
+                        message: message,
+                        isMe: isMe,
+                        isImage: message.type == 'image',
+                      );
+                    },
+                  );
+                },
               ),
-            ],
-          );
-        },
+            ),
+            Container(
+              color: Colors.white,
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              child: SafeArea(
+                child: ChatTextField(receiverId: userId),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildEmptyChat() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.chat_bubble_outline, 
+            size: 80, 
+            color: AppTheme.primaryColor.withOpacity(0.3)
+          ),
+          const SizedBox(height: 16),
+          Text(
+            'No messages yet\nStart the conversation!',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 16,
+              color: Colors.grey.shade600,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -226,6 +146,21 @@ class ChatScreen extends StatelessWidget {
       return 'Yesterday ${date.hour}:${date.minute.toString().padLeft(2, '0')}';
     } else {
       return '${date.day}/${date.month}/${date.year} ${date.hour}:${date.minute.toString().padLeft(2, '0')}';
+    }
+  }
+
+  String _formatDateHeader(DateTime date) {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final yesterday = today.subtract(const Duration(days: 1));
+    final messageDate = DateTime(date.year, date.month, date.day);
+
+    if (messageDate == today) {
+      return 'Today';
+    } else if (messageDate == yesterday) {
+      return 'Yesterday';
+    } else {
+      return '${date.day}/${date.month}/${date.year}';
     }
   }
 }

@@ -73,7 +73,7 @@ class FirebaseProvider extends ChangeNotifier {
         .collection('chats')
         .doc(senderId)
         .collection(receiverId)
-        .orderBy('sentTime', descending: false)
+        .orderBy('sentTime', descending: true)
         .snapshots()
         .listen((snapshot) {
       messages = snapshot.docs
@@ -84,13 +84,16 @@ class FirebaseProvider extends ChangeNotifier {
     });
   }
 
-  void scrollDown() =>
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (scrollController.hasClients) {
-          scrollController.jumpTo(
-              scrollController.position.maxScrollExtent);
-        }
-      });
+  void scrollDown() => 
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (scrollController.hasClients) {
+        scrollController.animateTo(
+          scrollController.position.maxScrollExtent,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOut,
+        );
+      }
+    });
 
   Future<void> searchUser(String name) async {
     search =

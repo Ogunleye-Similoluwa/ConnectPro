@@ -17,13 +17,6 @@ class FirebaseFirestoreService {
     String? image,
   }) async {
     try {
-      // Check if user already exists
-      final userDoc = await firestore.collection('users').doc(uid).get();
-      if (userDoc.exists) {
-        print('User already exists');
-        return;
-      }
-
       final newUser = UserModel(
         uid: uid,
         name: name,
@@ -33,7 +26,15 @@ class FirebaseFirestoreService {
         lastActive: DateTime.now(),
       );
 
+      // Create users collection if it doesn't exist
       await firestore.collection('users').doc(uid).set(newUser.toJson());
+      
+      // Create chats collection for the user
+      await firestore.collection('chats').doc(uid).set({
+        'lastActive': DateTime.now(),
+        'createdAt': DateTime.now(),
+      });
+
       print('User created successfully: $name ($email)');
     } catch (e) {
       print('Error creating user: $e');
@@ -187,23 +188,54 @@ class FirebaseFirestoreService {
         .where('uid', isNotEqualTo: auth.currentUser?.uid)
         .snapshots()
         .map((snapshot) {
+      if (snapshot.docs.isEmpty) {
+        print('No users found in collection');
+        return [];
+      }
+
       final users = snapshot.docs
-          .map((doc) => UserModel.fromJson(doc.data()))
+          .map((doc) {
+            try {
+              return UserModel.fromJson(doc.data());
+            } catch (e) {
+              print('Error parsing user data: $e');
+              return null;
+            }
+          })
+          .where((user) => user != null)
+          .cast<UserModel>()
           .toList();
 
-      // Remove duplicates based on email
-      final uniqueUsers = users.fold<Map<String, UserModel>>(
-        {},
-        (map, user) {
-          if (!map.containsKey(user.email)) {
-            map[user.email] = user;
-          }
-          return map;
-        },
-      ).values.toList();
-
-      print('Fetched ${uniqueUsers.length} unique users');
-      return uniqueUsers;
+      print('Found ${users.length} users');
+      return users;
     });
+  }
+
+  static Future<void> initializeUser() async {
+    try {
+      final user = auth.currentUser;
+      if (user == null) return;
+
+      final userDoc = await firestore.collection('users').doc(user.uid).get();
+      
+      if (!userDoc.exists) {
+        print('User document not found, creating new one');
+        // Get the display name that was set during signup
+        final displayName = user.displayName ?? 'User';
+        await createUser(
+          name: displayName,
+          email: user.email ?? '',
+          uid: user.uid,
+          image: user.photoURL,
+        );
+      } else {
+        await updateUserData({
+          'isOnline': true,
+          'lastActive': DateTime.now(),
+        });
+      }
+    } catch (e) {
+      print('Error initializing user: $e');
+    }
   }
 }
