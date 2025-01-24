@@ -238,4 +238,18 @@ class FirebaseFirestoreService {
       print('Error initializing user: $e');
     }
   }
+
+  static Future<void> updateTypingStatus(String receiverId, bool isTyping) async {
+    try {
+      final currentUser = auth.currentUser;
+      if (currentUser == null) return;
+
+      await firestore.collection('users').doc(currentUser.uid).update({
+        'isTyping': isTyping,
+        'typingTo': isTyping ? receiverId : null,
+      });
+    } catch (e) {
+      print('Error updating typing status: $e');
+    }
+  }
 }

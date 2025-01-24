@@ -41,28 +41,22 @@ class FirebaseProvider extends ChangeNotifier {
   }
 
   Future<void> getUserById(String userId) async {
-    int retries = 3;
-    while (retries > 0) {
-      try {
-        final getUser = await FirebaseFirestore.instance
-            .collection('users')
-            .doc(userId)
-            .get();
-
-        if (!getUser.exists || getUser.data() == null) {
-          return;
-        }
-
-        user = UserModel.fromJson(getUser.data()!);
+    try {
+      final snapshot = await FirebaseFirestore.instance.collection('users').doc(userId).get();
+      if (snapshot.exists) {
+        user = UserModel.fromJson(snapshot.data()!);
         notifyListeners();
-        return; // Success, exit the retry loop
-      } catch (e) {
-        print('Error getting user by ID (retries left: ${retries-1}): $e');
-        retries--;
-        if (retries > 0) {
-          await Future.delayed(Duration(seconds: 2)); // Wait before retrying
-        }
       }
+      
+      // Listen to real-time updates
+      FirebaseFirestore.instance.collection('users').doc(userId).snapshots().listen((event) {
+        if (event.exists) {
+          user = UserModel.fromJson(event.data()!);
+          notifyListeners();
+        }
+      });
+    } catch (e) {
+      print('Error getting user: $e');
     }
   }
 
@@ -80,20 +74,18 @@ class FirebaseProvider extends ChangeNotifier {
           .map((doc) => Message.fromJson(doc.data()))
           .toList();
       notifyListeners();
-      scrollDown();
     });
   }
 
-  void scrollDown() => 
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (scrollController.hasClients) {
-        scrollController.animateTo(
-          scrollController.position.maxScrollExtent,
-          duration: const Duration(milliseconds: 300),
-          curve: Curves.easeOut,
-        );
-      }
-    });
+  void scrollDown() {
+    if (scrollController.hasClients) {
+      scrollController.animateTo(
+        0,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeOut,
+      );
+    }
+  }
 
   Future<void> searchUser(String name) async {
     search =

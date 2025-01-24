@@ -8,6 +8,8 @@ class UserModel {
   final bool isOnline;
   final DateTime lastActive;
   final String? token;
+  final bool isTyping;
+  final String? typingTo;
 
   UserModel({
     required this.uid,
@@ -17,6 +19,8 @@ class UserModel {
     required this.isOnline,
     required this.lastActive,
     this.token,
+    this.isTyping = false,
+    this.typingTo,
   });
 
   factory UserModel.fromJson(Map<String, dynamic> json) => UserModel(
@@ -27,6 +31,8 @@ class UserModel {
     isOnline: json['isOnline'] ?? false,
     lastActive: (json['lastActive'] as Timestamp).toDate(),
     token: json['token'],
+    isTyping: json['isTyping'] ?? false,
+    typingTo: json['typingTo'],
   );
 
   Map<String, dynamic> toJson() => {
@@ -37,5 +43,7 @@ class UserModel {
     'isOnline': isOnline,
     'lastActive': Timestamp.fromDate(lastActive),
     'token': token,
+    'isTyping': isTyping,
+    'typingTo': typingTo,
   };
 }
