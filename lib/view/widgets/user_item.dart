@@ -1,3 +1,4 @@
+import 'package:firebase_chat_app/provider/firebase_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:timeago/timeago.dart' as timeago;
 
@@ -8,7 +9,8 @@ import '../screens/chat_screen.dart';
 
 class UserItem extends StatelessWidget {
   final UserModel user;
-  const UserItem({Key? key, required this.user}) : super(key: key);
+  final FirebaseProvider provider;
+  const UserItem({Key? key, required this.user, required this.provider}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -107,13 +109,16 @@ class UserItem extends StatelessWidget {
                 vertical: 6,
               ),
               decoration: BoxDecoration(
-                color: Colors.green.withOpacity(0.1),
+                color: provider.user!.isOnline 
+                            ? Colors.green.withOpacity(0.1):Colors.grey.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(20),
               ),
               child: Text(
-                'Online',
+                 provider.user!.isOnline 
+                            ? 'Online': 'Offline',
                 style: TextStyle(
-                  color: Colors.green.shade600,
+                  color:provider.user!.isOnline 
+                            ? Colors.green.shade600:Colors.black,
                   fontSize: 12,
                   fontWeight: FontWeight.w500,
                 ),

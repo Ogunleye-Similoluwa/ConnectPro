@@ -74,40 +74,6 @@ class _ChatsScreenState extends State<ChatsScreen>
     super.dispose();
   }
 
-  final userData = [
-    UserModel(
-      uid: '1',
-      name: 'Hazy',
-      email: 'test@test.test',
-      image: 'https://i.pravatar.cc/150?img=0',
-      isOnline: true,
-      lastActive: DateTime.now(),
-    ),
-    UserModel(
-      uid: '4',
-      name: 'Charlotte',
-      email: 'test@test.test',
-      image: 'https://i.pravatar.cc/150?img=1',
-      isOnline: false,
-      lastActive: DateTime.now(),
-    ),
-    UserModel(
-      uid: '2',
-      name: 'Ahmed',
-      email: 'test@test.test',
-      image: 'https://i.pravatar.cc/150?img=2',
-      isOnline: true,
-      lastActive: DateTime.now(),
-    ),
-    UserModel(
-      uid: '3',
-      name: 'Prateek',
-      email: 'test@test.test',
-      image: 'https://i.pravatar.cc/150?img=3',
-      isOnline: false,
-      lastActive: DateTime.now(),
-    ),
-  ];
 
   @override
   Widget build(BuildContext context) {
@@ -177,7 +143,7 @@ class _ChatsScreenState extends State<ChatsScreen>
               physics: const BouncingScrollPhysics(),
               itemBuilder: (context, index) {
                 final user = uniqueUsers[index];
-                return UserItem(user: user);
+                return UserItem(user: user, provider: provider);
               },
             );
           },

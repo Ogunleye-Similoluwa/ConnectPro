@@ -86,7 +86,7 @@ class _UsersSearchScreenState
                                           .currentUser?.uid
                                   ? UserItem(
                                       user: value
-                                          .search[index])
+                                          .search[index],provider: value,)
                                   : const SizedBox(),
                         ),
                 ),
