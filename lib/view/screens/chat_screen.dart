@@ -346,6 +346,7 @@ class _ChatScreenState extends State<ChatScreen> {
                       Text(
                         provider.user!.isOnline 
                             ? 'Online'
+                            // ignore: unnecessary_null_comparison
                             : provider.user!.lastActive != null
                                 ? 'last seen ${_formatLastSeen(provider.user!.lastActive!)}'
                                 : 'Offline',
@@ -508,13 +509,13 @@ class _ChatScreenState extends State<ChatScreen> {
 
   void _startVideoCall() {
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Video call feature coming soon!')),
+      const SnackBar(content: Text('Video call feature coming soon')),
     );
   }
 
   void _startVoiceCall() {
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Voice call feature coming soon!')),
+      const SnackBar(content: Text('Voice call feature coming soon')),
     );
   }
 
