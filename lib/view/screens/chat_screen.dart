@@ -509,13 +509,13 @@ class _ChatScreenState extends State<ChatScreen> {
 
   void _startVideoCall() {
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Video call feature coming soon')),
+      const SnackBar(content: Text('Video call feature coming soon!')),
     );
   }
 
   void _startVoiceCall() {
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Voice call feature coming soon')),
+      const SnackBar(content: Text('Voice call feature coming soon!')),
     );
   }
 
