@@ -123,7 +123,7 @@ class NotificationsService {
           .doc(user.uid)
           .update({'token': token});
     } catch (e) {
-      print('Error saving token: $e');
+      print(' Issue saving token: $e');
     }
   }
 
